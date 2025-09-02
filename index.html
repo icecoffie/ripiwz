@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ripiwz — Review Locations & Hot Spots</title>
+
+  <!-- Vendor CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+
+  <!-- App CSS -->
+  <link href="style.css" rel="stylesheet"/>
+
+  <meta name="description" content="Ripiwz — Discover, watch, and rate the best places in your city.">
+  <meta name="theme-color" content="#0b0f14"/>
+
+  <!-- JSON-LD (SEO) -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebApplication",
+    "name":"Ripiwz",
+    "applicationCategory":"TravelApplication",
+    "description":"Place review platform: watch videos, see the map, and give star ratings.",
+    "inLanguage":"en"
+  }
+  </script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container py-2">
+      <a class="navbar-brand fw-bold fs-4" href="#">
+        <i class="fa-solid fa-location-dot me-2 text-info"></i>
+        <span class="brand-gradient">Ripiwz</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#explore">Explore</a></li>
+          <li class="nav-item"><a class="nav-link" href="#mapSection">Map</a></li>
+          <li class="nav-item"><a class="nav-link" href="#videoSection">Video</a></li>
+          <li class="nav-item">
+            <button class="btn btn-accent btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+              <i class="fa-solid fa-star-half-stroke me-1"></i>Add Review
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="glow"></div>
+    <div class="container py-5">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <h1 class="display-5 fw-bold lh-1">Discover the best spots around Munich with <span class="brand-gradient">Ripiwz</span>.</h1>
+          <p class="lead mt-3 opa-70">Watch the vibe through videos, see locations on the map, read authentic reviews, and drop your stars. From specialty coffee to iconic markets — we’ve got you covered.</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="#explore" class="btn btn-accent btn-lg"><i class="fa-solid fa-compass me-2"></i>Start Exploring</a>
+            <a href="#mapSection" class="btn btn-outline-light btn-lg"><i class="fa-regular fa-map me-2"></i>Open Map</a>
+          </div>
+          <ul class="list-inline mt-4 mb-0 small">
+            <li class="list-inline-item"><i class="fa-solid fa-shield-heart me-1 text-success"></i>No intrusive ads</li>
+            <li class="list-inline-item"><i class="fa-solid fa-star me-1 text-warning"></i>Interactive star ratings</li>
+          </ul>
+        </div>
+        <div class="col-lg-5">
+          <div class="video-wrap shadow">
+            <iframe title="Penguins & Ice teaser" src="penguin.gif" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+          <p class="small mt-2 opa-70">For all the best place and review!</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter & Explore -->
+  <main class="container my-5" id="explore" aria-live="polite">
+    <div class="filter-bar p-3 p-lg-4 mb-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Search places</label>
+          <input id="searchInput" type="search" class="form-control" placeholder="Type a place, area, or keyword…">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Category</label>
+          <select id="categoryFilter" class="form-select">
+            <option value="">All</option>
+            <option>Kafe</option>
+            <option>Restoran</option>
+            <option>Taman</option>
+            <option>Wisata</option>
+            <option>Co-working</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Min. stars</label>
+          <select id="minRating" class="form-select">
+            <option value="0">All</option>
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★☆ (4+)</option>
+            <option value="3">★★★☆☆ (3+)</option>
+            <option value="2">★★☆☆☆ (2+)</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Sort by</label>
+          <select id="sortBy" class="form-select">
+            <option value="top">Top rated</option>
+            <option value="new">Newest</option>
+            <option value="near">Nearest (needs location)</option>
+          </select>
+        </div>
+      </div>
+      <div class="d-flex gap-3 mt-3">
+        <button id="clearBtn" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-eraser me-1"></i>Reset</button>
+        <button id="geoBtn" class="btn btn-outline-info btn-sm"><i class="fa-solid fa-location-crosshairs me-1"></i>Use My Location</button>
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <span class="small opa-70">Average rating:</span>
+          <div id="avgStars" aria-label="Average rating"></div>
+          <span id="avgScore" class="small opa-70"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="cards" class="row g-4"></div>
+  </main>
+
+  <!-- Map Section -->
+  <section class="container mb-5" id="mapSection">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <h2 class="h4 fw-bold">Map</h2>
+        <p class="opa-70">Click a marker for details. Pick a card to focus the map.</p>
+        <div id="map" role="region" aria-label="Ripiwz map"></div>
+        <p class="small mt-2 opa-70">Map data © <a class="link-light" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+      </div>
+      <div class="col-lg-6" id="videoSection">
+        <h2 class="h4 fw-bold">Selected Location Video</h2>
+        <div class="video-wrap shadow">
+          <video id="videoPlayer" controls preload="metadata" poster="" aria-label="Location video">
+            <source id="videoSrc" src="" type="video/mp4">
+            Your browser does not support the built-in video player.
+          </video>
+        </div>
+        <p class="small mt-2 opa-70">Tip: click ▶️ on any card to play the location video here.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal Add Review -->
+  <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content modal-content-dark">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2 text-info"></i>Add Review</h5>
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="addForm" class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Place Name</label>
+              <input required name="name" class="form-control" placeholder="e.g., Man Versus Machine">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Category</label>
+              <select required name="category" class="form-select">
+                <option value="" selected disabled>Choose…</option>
+                <option>Kafe</option>
+                <option>Restoran</option>
+                <option>Taman</option>
+                <option>Wisata</option>
+                <option>Co-working</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label d-block">Rating</label>
+              <div class="rating-input fs-4" aria-label="Pick a rating" role="radiogroup">
+                <i class="fa-regular fa-star" data-val="1" role="radio" aria-checked="false" tabindex="0"></i>
+                <i class="fa-regular fa-star" data-val="2" role="radio" aria-checked="false" tabindex="0"></i>
+                <i class="fa-regular fa-star" data-val="3" role="radio" aria-checked="false" tabindex="0"></i>
+                <i class="fa-regular fa-star" data-val="4" role="radio" aria-checked="false" tabindex="0"></i>
+                <i class="fa-regular fa-star" data-val="5" role="radio" aria-checked="false" tabindex="0"></i>
+                <input type="hidden" name="rating" value="0">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Coordinates (Lat)</label>
+              <input required name="lat" class="form-control" placeholder="48.137">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Coordinates (Lng)</label>
+              <input required name="lng" class="form-control" placeholder="11.575">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Short Description</label>
+              <textarea required name="desc" class="form-control" rows="3" placeholder="What did you like here?"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Video URL (mp4/YT embed)</label>
+              <input name="video" class="form-control" placeholder="https://…">
+              <div class="form-text">If YouTube, use an embed link (youtube.com/embed/...).</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Address / Area</label>
+              <input name="address" class="form-control" placeholder="Altstadt, Munich">
+            </div>
+          </div>
+          <div class="mt-4 d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-accent">Save Review</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="py-4 mt-5">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <span class="small opa-70">© <span id="y"></span> Ripiwz for urban explorers.</span>
+      <div class="d-flex gap-3 small">
+        <a class="link-light" href="#" aria-label="Privacy Policy">Privacy</a>
+        <span class="opa-70">•</span>
+        <a class="link-light" href="#" aria-label="Terms & Conditions">T&C</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vendor JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- App JS -->
+  <script src="main.js" defer></script>
+</body>
+</html>
